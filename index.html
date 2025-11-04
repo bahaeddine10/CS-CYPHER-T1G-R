@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CS - CYPHER : T1GËR</title>
+  <!-- Pixel / gaming font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-1:#04070a;
+      --bg-2:#001214;
+      --neon:#ffd166; /* gold */
+      --accent:#ffdf6b; /* lighter gold */
+      --dim:#3b2f0b;
+    }
+    html,body{height:100%;margin:0;font-family:'Press Start 2P', monospace;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:var(--neon);overflow:hidden}
+
+    /* Matrix rain canvas sits behind everything */
+    #matrix{position:fixed;inset:0;z-index:0;opacity:0.16;filter:blur(0.6px)}
+
+    /* Center stage */
+    .stage{position:relative;z-index:2;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem}
+
+    /* Title block */
+    .title-wrap{position:relative;padding:1.5rem 2rem;border-radius:12px;background:linear-gradient(135deg, rgba(0,0,0,0.35), rgba(255,255,255,0.02));box-shadow:0 10px 30px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,255,160,0.02)}
+
+    h1.glitch{font-size:28px;line-height:1;letter-spacing:2px;margin:0;position:relative;color:var(--neon);text-shadow:0 0 8px rgba(0,255,160,0.25);}
+
+    /* Glitch layers */
+    h1.glitch::before,h1.glitch::after{
+      content:attr(data-text);
+      position:absolute;left:0;top:0;width:100%;height:100%;
+      clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+      animation:glitch 2.8s infinite linear;
+      opacity:0.85;
+    }
+    h1.glitch::before{color:var(--accent);transform:translate(-2px,-2px);mix-blend-mode:screen;animation-duration:3s}
+    h1.glitch::after{color:#ff3b80;transform:translate(2px,2px);mix-blend-mode:screen;animation-duration:2.4s}
+
+    @keyframes glitch{
+      0%{clip-path:polygon(0 2%,100% 2%,100% 5%,0 5%);transform:translate(0)}
+      10%{clip-path:polygon(0 15%,100% 15%,100% 18%,0 18%);transform:translate(-1px,1px)}
+      20%{clip-path:polygon(0 35%,100% 35%,100% 38%,0 38%);transform:translate(1px,-1px)}
+      30%{clip-path:polygon(0 55%,100% 55%,100% 58%,0 58%);transform:translate(-2px,0)}
+      40%{clip-path:polygon(0 75%,100% 75%,100% 78%,0 78%);transform:translate(2px,1px)}
+      50%{clip-path:polygon(0 45%,100% 45%,100% 48%,0 48%);transform:translate(0,-1px)}
+      60%{clip-path:polygon(0 25%,100% 25%,100% 28%,0 28%);transform:translate(-1px,0)}
+      70%{clip-path:polygon(0 60%,100% 60%,100% 63%,0 63%);transform:translate(1px,2px)}
+      80%{clip-path:polygon(0 10%,100% 10%,100% 12%,0 12%);transform:translate(-1px,-2px)}
+      90%{clip-path:polygon(0 85%,100% 85%,100% 88%,0 88%);transform:translate(2px,0)}
+      100%{clip-path:polygon(0 2%,100% 2%,100% 5%,0 5%);transform:translate(0)}
+    }
+    .scanlines{position:fixed;inset:0;z-index:3;pointer-events:none;background-image:linear-gradient(rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.08) 51%);background-size:100% 4px;mix-blend-mode:multiply;opacity:0.6}
+    p.hint{margin-top:18px;font-size:10px;color:rgba(99,255,240,0.9);opacity:0.95}
+    .pulse{animation:pulse 2.8s infinite ease-in-out}
+    @keyframes pulse{0%{filter:drop-shadow(0 0 6px rgba(0,255,160,0.12))}50%{filter:drop-shadow(0 0 28px rgba(0,255,160,0.28))}100%{filter:drop-shadow(0 0 6px rgba(0,255,160,0.12))}}
+    .card{margin-top:22px;padding:10px 14px;border-radius:8px;background:rgba(0,0,0,0.25);backdrop-filter: blur(4px);border:1px solid rgba(0,255,160,0.06);font-size:11px;color:#8ff2d8}
+    @media (min-width:900px){h1.glitch{font-size:36px}}
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="stage">
+    <div class="title-wrap pulse">
+      <h1 class="glitch" data-text="CS - CYPHER : T1GËR">CS - CYPHER : T1GËR</h1>
+    </div>
+    <p class="hint">mode: gaming • style: pixel / hack</p>
+    <div class="card">console: <span id="console">initializing...</span></div>
+  </div>
+  <div class="scanlines"></div>
+
+  <script>
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = innerWidth;
+    let H = canvas.height = innerHeight;
+
+    const cols = Math.floor(W / 14);
+    const drops = Array(cols).fill(1);
+
+    function resize(){
+      W = canvas.width = innerWidth; H = canvas.height = innerHeight;
+    }
+    addEventListener('resize', resize);
+
+    function draw(){
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.fillRect(0,0,W,H);
+      ctx.font = '13px monospace';
+      for(let i=0;i<drops.length;i++){
+        const x = i*14;
+        const y = drops[i]*14;
+        ctx.fillStyle = 'rgba(0,255,160,' + (Math.random()*0.6+0.2) + ')';
+        ctx.fillText(String.fromCharCode(33 + Math.random()*94 | 0), x, y);
+        if(y > H && Math.random() > 0.975) drops[i]=0;
+        drops[i]++;
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+    const consoleEl = document.getElementById('console');
+    const logs = [
+      'booting kernel v4.cypher',
+      'injecting sprite: tiger',
+      'mapping pixels...',
+      'overclocking fonts',
+      'auth: anonymous[ok]'
+    ];
+    let li=0;
+    setInterval(()=>{
+      consoleEl.textContent = logs[li%logs.length]; li++;
+    },1400);
+    let hacked=false;
+    addEventListener('keydown', e=>{
+      if(e.key.toLowerCase()==='h'){
+        hacked = !hacked;
+        document.body.style.background = hacked ? 'linear-gradient(180deg,#00110d,#000)' : 'linear-gradient(180deg,var(--bg-1),var(--bg-2))';
+      }
+    });
+  </script>
+</body>
+</html>
